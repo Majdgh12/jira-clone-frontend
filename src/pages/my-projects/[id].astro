@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+
+import "../../styles/tailwind.css";
+import AppShell from "../../components/layouts/AppShell.astro";
+import ProjectKanban from "../../components/react/ProjectKanban";
+import { requireAuth } from "../../lib/auth/requireAuth";
+
+const { id } = Astro.params;
+---
+
+<script is:inline>
+  import { requireAuth } from "../../lib/auth/requireAuth";
+  requireAuth();
+</script>
+
+<AppShell title="Project Board">
+  <ProjectKanban client:load projectId={id} />
+</AppShell>

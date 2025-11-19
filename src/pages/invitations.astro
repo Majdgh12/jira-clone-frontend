@@ -1,0 +1,9 @@
+---
+import "../styles/tailwind.css";
+import AppShell from "../components/layouts/AppShell.astro";
+import InvitationsPage from "../components/react/InvitationsPage";
+---
+
+<AppShell title="Invitations">
+  <InvitationsPage client:load />
+</AppShell>

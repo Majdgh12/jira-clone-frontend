@@ -1,0 +1,15 @@
+---
+import "../../styles/tailwind.css";
+import AppShell from "../../components/layouts/AppShell.astro";
+import { ProjectsList } from "../../components/react/ProjectsList";
+import { requireAuth } from "../../lib/auth/requireAuth";
+---
+
+<script is:inline>
+  import { requireAuth } from "../../lib/auth/requireAuth";
+  requireAuth();
+</script>
+
+<AppShell title="Projects">
+  <ProjectsList client:load />
+</AppShell>

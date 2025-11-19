@@ -1,0 +1,81 @@
+---
+import "../../styles/tailwind.css";
+import RoleLoader from "../react/RoleLoader";
+---
+
+<RoleLoader client:load />
+
+<aside class="w-64 min-h-screen bg-white border-r p-6 shadow-sm">
+  <h2 class="text-xl font-bold mb-8 text-gray-900">Jira Clone</h2>
+
+  <nav id="sidebar-links" class="space-y-3"></nav>
+</aside>
+
+<script>
+  async function getInviteCount() {
+    try {
+      const res = await fetch("/api/proxy?url=/projects/invitations/me", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      return Array.isArray(data) ? data.length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  const userLinks = async () => {
+    const count = await getInviteCount();
+    return [
+    
+      { label: "My Projects", href: "/my-projects" },
+      {
+        label:
+          count > 0
+            ? `Invitations <span class="ml-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">${count}</span>`
+            : `Invitations`,
+        html: true,
+        href: "/invitations",
+      },
+      { label: "AI Insights", href: "/ai-insights" },
+    ];
+  };
+
+  const adminLinks = [
+    { label: "Admin Dashboard", href: "" },
+    { label: "Projects", href: "/projects" },
+    { label: "AI Insights", href: "/ai" },
+  ];
+
+  function renderLinks(links) {
+    const sidebar = document.getElementById("sidebar-links");
+    if (!sidebar) return;
+
+    sidebar.innerHTML = links
+      .map(
+        (item) => `
+        <a href="${item.href}" class="block text-gray-700 hover:text-blue-600 font-medium text-sm">
+          ${item.html ? item.label : item.label}
+        </a>
+      `
+      )
+      .join("");
+  }
+
+  async function initSidebar() {
+    if (window.__USER_ROLE__ === "admin") {
+      renderLinks(adminLinks);
+    } else if (window.__USER_ROLE__) {
+      renderLinks(await userLinks());
+    }
+  }
+
+  initSidebar();
+
+  const interval = setInterval(async () => {
+    if (window.__USER_ROLE__) {
+      clearInterval(interval);
+      await initSidebar();
+    }
+  }, 100);
+</script>

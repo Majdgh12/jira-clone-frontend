@@ -1,0 +1,18 @@
+---
+export const prerender = false;
+
+import "../../styles/tailwind.css";
+import AppShell from "../../components/layouts/AppShell.astro";
+import { IssuePage } from "../../components/react/IssuePage";
+
+const id = Astro.params.id;
+---
+
+<script is:inline>
+  import { requireAuth } from "../../lib/auth/requireAuth";
+  requireAuth();
+</script>
+
+<AppShell title="Issue Details">
+  <IssuePage client:load issueId={id} />
+</AppShell>
