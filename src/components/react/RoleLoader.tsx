@@ -18,7 +18,7 @@ export default function RoleLoader() {
                     return;
                 }
 
-                const res = await fetch("http://localhost:3000/users/me", {
+                const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/users/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

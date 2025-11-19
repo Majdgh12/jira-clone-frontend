@@ -9,7 +9,7 @@ export default function ProjectsPage() {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
 
         async function load() {
-            const res = await fetch("http://localhost:3000/projects", {
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/projects`, {
                 headers: { Authorization: `Bearer ${token}` },
             }).then((r) => r.json());
 

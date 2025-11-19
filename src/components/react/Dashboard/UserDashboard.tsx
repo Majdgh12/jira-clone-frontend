@@ -10,7 +10,7 @@ export default function UserDashboard() {
 
         async function fetchData() {
             // Get all projects where current user is manager or member
-            const p = await fetch("http://localhost:3000/projects", {
+            const p = await fetch(`${import.meta.env.PUBLIC_API_URL}/projects`, {
                 headers: { Authorization: `Bearer ${token}` },
             }).then((res) => res.json());
 
@@ -25,7 +25,7 @@ export default function UserDashboard() {
             const tasks = [];
             for (const proj of p.data) {
                 const issues = await fetch(
-                    `http://localhost:3000/issues/${proj.id}`,
+                    `${import.meta.env.PUBLIC_API_URL}/issues/${proj.id}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 ).then((res) => res.json());
 

@@ -32,7 +32,7 @@ export default function UserProjectsList() {
         async function loadProjects() {
             const token = localStorage.getItem("jira_clone_token");
 
-            const res = await fetch("http://localhost:3000/projects", {
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/projects`, {
                 headers: { Authorization: `Bearer ${token}` },
                 cache: "no-store",
             });

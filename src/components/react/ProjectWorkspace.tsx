@@ -10,14 +10,14 @@ export default function ProjectWorkspace({ projectId }) {
 
         async function load() {
             const p = await fetch(
-                `http://localhost:3000/projects/${projectId}`,
+                `${import.meta.env.PUBLIC_API_URL}/projects/${projectId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             ).then(r => r.json());
 
             setProject(p.data);
 
             const i = await fetch(
-                `http://localhost:3000/issues/${projectId}`,
+                `${import.meta.env.PUBLIC_API_URL}/issues/${projectId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             ).then(r => r.json());
 
