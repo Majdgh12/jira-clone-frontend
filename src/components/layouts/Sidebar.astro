@@ -1,6 +1,9 @@
 ---
 import "../../styles/tailwind.css";
 import RoleLoader from "../react/RoleLoader";
+
+// Hardcode backend URL here to avoid import.meta in browser <script>
+const API = "https://jira-clone-backend-oemb.onrender.com";
 ---
 
 <RoleLoader client:load />
@@ -12,9 +15,7 @@ import RoleLoader from "../react/RoleLoader";
 </aside>
 
 <script>
-  const API =
-    import.meta.env.PUBLIC_API_URL ||
-    "https://jira-clone-backend-oemb.onrender.com";
+  const API = "https://jira-clone-backend-oemb.onrender.com";
 
   async function getInviteCount() {
     try {
