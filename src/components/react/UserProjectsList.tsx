@@ -40,8 +40,18 @@ export default function UserProjectsList() {
             const data = await res.json();
             const all = Array.isArray(data) ? data : data.data || [];
 
-            setMyProjects(all.filter((p) => getOwnerId(p) === (u._id || u.id)));
-            setJoinedProjects(all.filter((p) => getOwnerId(p) !== (u._id || u.id)));
+            setMyProjects(
+                all.filter((p) =>
+                    getOwnerId(p) === userId
+                )
+            );
+
+            setJoinedProjects(
+                all.filter((p) =>
+                    getOwnerId(p) !== userId &&
+                    p.members?.some((m) => m._id === userId || m.id === userId)
+                )
+            );
         }
 
         loadProjects();
