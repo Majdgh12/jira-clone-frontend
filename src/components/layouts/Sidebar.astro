@@ -12,11 +12,21 @@ import RoleLoader from "../react/RoleLoader";
 </aside>
 
 <script>
+  const API =
+    import.meta.env.PUBLIC_API_URL ||
+    "https://jira-clone-backend-oemb.onrender.com";
+
   async function getInviteCount() {
     try {
-      const res = await fetch("/api/proxy?url=/projects/invitations/me", {
-        credentials: "include",
+      const token = localStorage.getItem("jira_clone_token");
+      if (!token) return 0;
+
+      const res = await fetch(`${API}/projects/invitations/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) return 0;
+
       const data = await res.json();
       return Array.isArray(data) ? data.length : 0;
     } catch {
@@ -27,13 +37,12 @@ import RoleLoader from "../react/RoleLoader";
   const userLinks = async () => {
     const count = await getInviteCount();
     return [
-    
       { label: "My Projects", href: "/my-projects" },
       {
         label:
           count > 0
             ? `Invitations <span class="ml-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">${count}</span>`
-            : `Invitations`,
+            : "Invitations",
         html: true,
         href: "/invitations",
       },
@@ -55,7 +64,7 @@ import RoleLoader from "../react/RoleLoader";
       .map(
         (item) => `
         <a href="${item.href}" class="block text-gray-700 hover:text-blue-600 font-medium text-sm">
-          ${item.html ? item.label : item.label}
+          ${item.label}
         </a>
       `
       )

@@ -99,7 +99,7 @@ export default function ProjectKanban({ projectId }) {
         }
     }
 
-    if (loading || !project) return <p className="p-4">Loading…</p>;
+    if (loading || !project) return <p className="p-4">Loading...</p>;
 
     return (
         <div className="space-y-6">
