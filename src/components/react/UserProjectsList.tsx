@@ -40,18 +40,25 @@ export default function UserProjectsList() {
             const data = await res.json();
             const all = Array.isArray(data) ? data : data.data || [];
 
-            setMyProjects(
-                all.filter((p) =>
-                    getOwnerId(p) === userId
-                )
+            const meId = u._id || u.id;
+
+            // FIXED — owner detection
+            function ownerId(p) {
+                if (!p.owner) return null;
+                if (typeof p.owner === "string") return p.owner;
+                return p.owner._id || p.owner.id;
+            }
+
+            // FIXED — project where I am the owner
+            const owned = all.filter((p) => ownerId(p) === meId);
+
+            // FIXED — project where I am in members list
+            const joined = all.filter(
+                (p) => p.members?.some((m) => m._id === meId || m.id === meId)
             );
 
-            setJoinedProjects(
-                all.filter((p) =>
-                    getOwnerId(p) !== userId &&
-                    p.members?.some((m) => m._id === userId || m.id === userId)
-                )
-            );
+            setMyProjects(owned);
+            setJoinedProjects(joined);
         }
 
         loadProjects();
