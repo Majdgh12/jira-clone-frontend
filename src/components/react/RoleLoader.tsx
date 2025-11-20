@@ -6,26 +6,19 @@ declare global {
     }
 }
 
-type UserRole = "admin" | "manager" | "member";
-
 export default function RoleLoader() {
-    const [role, setRole] = useState<UserRole | null>(null);
+    const [role, setRole] = useState<"admin" | "manager" | "member" | null>(null);
 
     useEffect(() => {
         async function fetchUser() {
             try {
                 const token = localStorage.getItem("jira_clone_token");
                 if (!token) {
-                    console.warn("[RoleLoader] No access token in localStorage");
+                    console.warn("[RoleLoader] No access_token in localStorage");
                     return;
                 }
 
-                const base =
-                    import.meta.env.PUBLIC_API_URL ||
-                    import.meta.env.VITE_PUBLIC_API_URL ||
-                    "https://jira-clone-backend-oemb.onrender.com";
-
-                const res = await fetch(`${base}/auth/me`, {
+                const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/users/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -39,8 +32,9 @@ export default function RoleLoader() {
                 const data = await res.json();
                 console.log("[RoleLoader] /auth/me response:", data);
 
+                // Try to be flexible with API shape:
                 const user = (data.user ?? data.data ?? data) as any;
-                const detectedRole: UserRole | undefined =
+                const detectedRole: "admin" | "manager" | "member" | undefined =
                     user.role ?? user.globalRole ?? user?.roles?.[0];
 
                 if (!detectedRole) {

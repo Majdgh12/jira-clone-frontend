@@ -5,16 +5,10 @@ import KanbanColumn from "./KanbanColumn";
 import CreateIssueModal from "./issues/IssueCreateModal";
 import InviteModal from "./Projects/InviteModal";
 
-interface User {
-    _id?: string;
-    id?: string;
-    role?: "admin" | "manager" | "member";
-}
-
-export default function ProjectKanban({ projectId }: { projectId: string }) {
-    const [project, setProject] = useState<any>(null);
-    const [issues, setIssues] = useState<any[]>([]);
-    const [user, setUser] = useState<User | null>(null);
+export default function ProjectKanban({ projectId }) {
+    const [project, setProject] = useState(null);
+    const [issues, setIssues] = useState([]);
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -35,7 +29,7 @@ export default function ProjectKanban({ projectId }: { projectId: string }) {
             setProject(p);
 
             const res = await IssuesApi.getByProject(projectId);
-            setIssues(Array.isArray(res) ? res : (res as any).data || []);
+            setIssues(Array.isArray(res) ? res : res.data || []);
         } catch (e) {
             console.error("[ProjectKanban] load error:", e);
         } finally {
@@ -57,36 +51,34 @@ export default function ProjectKanban({ projectId }: { projectId: string }) {
 
         if (owner === currentUserId) return true;
 
-        const isManager = project.projectRoles?.some((r: any) => {
+        const isManager = project.projectRoles?.some((r) => {
             const rid =
-                typeof r.userId === "string"
-                    ? r.userId
-                    : r.userId?._id || r.userId?.id;
+                typeof r.userId === "string" ? r.userId : r.userId?._id || r.userId?.id;
             return rid === currentUserId && r.role === "manager";
         });
 
         return isManager || user.role === "admin";
     })();
 
-    function issuesByStatus(status: string) {
+    function issuesByStatus(status) {
         return issues.filter((i) => i?.status === status);
     }
 
-    function getAssigneeId(issue: any) {
+    function getAssigneeId(issue) {
         if (!issue.assignee) return null;
         return typeof issue.assignee === "string"
             ? issue.assignee
             : issue.assignee._id || issue.assignee.id;
     }
 
-    async function moveIssue(issueId: string, newStatus: string) {
+    async function moveIssue(issueId, newStatus) {
         const issue = issues.find((i) => i._id === issueId);
         if (!issue) return;
 
         const assignedToCurrent = getAssigneeId(issue) === currentUserId;
 
         if (!canManage && !assignedToCurrent) {
-            alert("You cannot move issues that are not assigned to you.");
+            alert("❌ You cannot move issues that are not assigned to you.");
             return;
         }
 
@@ -107,9 +99,7 @@ export default function ProjectKanban({ projectId }: { projectId: string }) {
         }
     }
 
-    if (loading || !project) {
-        return <p className="p-4">Loading...</p>; // ASCII dots -> no hydration issue
-    }
+    if (loading || !project) return <p className="p-4">Loading...</p>;
 
     return (
         <div className="space-y-6">

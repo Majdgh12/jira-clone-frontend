@@ -1,109 +1,71 @@
 import React, { useEffect, useState } from "react";
 import { AiApi } from "../../lib/api/ai";
 import { CreateProjectModal } from "./CreateProjectModal";
-import { ProjectsApi } from "../../lib/api/projects";
-
-type UserRole = "admin" | "manager" | "member";
-
-interface User {
-    _id?: string;
-    id?: string;
-    name?: string;
-    email?: string;
-    role?: UserRole;
-}
-
-interface ProjectUser {
-    _id: string;
-    name?: string;
-    email?: string;
-    role?: UserRole;
-}
-
-interface Project {
-    _id: string;
-    name: string;
-    description?: string;
-    owner?: string | ProjectUser;
-    members?: ProjectUser[];
-    projectRoles?: { userId: string | ProjectUser; role: UserRole }[];
-}
 
 export default function UserProjectsList() {
-    const [myProjects, setMyProjects] = useState<Project[]>([]);
-    const [joinedProjects, setJoinedProjects] = useState<Project[]>([]);
+    const [myProjects, setMyProjects] = useState([]);
+    const [joinedProjects, setJoinedProjects] = useState([]);
     const [showModal, setShowModal] = useState(false);
 
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState(null);
+    const [userId, setUserId] = useState(null);
 
     // AI Summary
     const [aiModal, setAiModal] = useState(false);
     const [aiSummary, setAiSummary] = useState("");
     const [aiLoading, setAiLoading] = useState(false);
 
-    function getUserId(u: User | null): string | null {
-        if (!u) return null;
-        return (u._id as string) || (u.id as string) || null;
-    }
-
-    function getOwnerId(p: Project): string | null {
+    function getOwnerId(p) {
         if (!p.owner) return null;
         if (typeof p.owner === "string") return p.owner;
-        return p.owner._id;
-    }
-
-    function isMemberOf(p: Project, userId: string): boolean {
-        if (p.members?.some((m) => m._id === userId)) return true;
-
-        if (
-            p.projectRoles?.some((r) => {
-                if (!r.userId) return false;
-                if (typeof r.userId === "string") return r.userId === userId;
-                return r.userId._id === userId;
-            })
-        ) {
-            return true;
-        }
-
-        return false;
+        return p.owner._id || p.owner.id;
     }
 
     // Load user & projects
     useEffect(() => {
         if (typeof window === "undefined") return;
 
-        const raw = localStorage.getItem("jira_user");
-        if (!raw) return;
-
-        const u: User = JSON.parse(raw);
+        const u = JSON.parse(localStorage.getItem("jira_user") || "{}");
         setUser(u);
-        const meId = getUserId(u);
-        if (!meId) return;
+        setUserId(u._id || u.id);
 
         async function loadProjects() {
-            try {
-                const res = await ProjectsApi.getAll();
-                const all: Project[] = Array.isArray(res)
-                    ? res
-                    : (res as any).data || [];
+            const token = localStorage.getItem("jira_clone_token");
 
-                const owned = all.filter((p) => getOwnerId(p) === meId);
-                const joined = all.filter(
-                    (p) => getOwnerId(p) !== meId && isMemberOf(p, meId)
-                );
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/projects`, {
+                headers: { Authorization: `Bearer ${token}` },
+                cache: "no-store",
+            });
 
-                setMyProjects(owned);
-                setJoinedProjects(joined);
-            } catch (e) {
-                console.error("[UserProjectsList] Failed to load projects:", e);
+            const data = await res.json();
+            const all = Array.isArray(data) ? data : data.data || [];
+
+            const meId = u._id || u.id;
+
+            // FIXED — owner detection
+            function ownerId(p) {
+                if (!p.owner) return null;
+                if (typeof p.owner === "string") return p.owner;
+                return p.owner._id || p.owner.id;
             }
+
+            // FIXED — project where I am the owner
+            const owned = all.filter((p) => ownerId(p) === meId);
+
+            // FIXED — project where I am in members list
+            const joined = all.filter(
+                (p) => p.members?.some((m) => m._id === meId || m.id === meId)
+            );
+
+            setMyProjects(owned);
+            setJoinedProjects(joined);
         }
 
         loadProjects();
     }, []);
 
     const canCreate =
-        user?.role === "manager" || user?.role === "member" || user?.role === "admin";
+        user?.role === "manager" || user?.role === "member";
 
     async function generateSummary(projectId: string) {
         setAiModal(true);
@@ -154,6 +116,7 @@ export default function UserProjectsList() {
                                 <p className="text-xs text-gray-500 mt-2">Owner: You</p>
                             </div>
 
+                            {/* AI summary only for my projects */}
                             <button
                                 onClick={() => generateSummary(p._id)}
                                 className="mt-3 py-2 px-3 bg-purple-600 text-white text-sm rounded-md"
@@ -162,10 +125,6 @@ export default function UserProjectsList() {
                             </button>
                         </div>
                     ))}
-
-                    {myProjects.length === 0 && (
-                        <p className="text-sm text-gray-500">You do not own any projects yet.</p>
-                    )}
                 </div>
             </section>
 
@@ -184,18 +143,12 @@ export default function UserProjectsList() {
                             >
                                 <h3 className="font-semibold text-lg">{p.name}</h3>
                                 <p className="text-sm text-gray-600">{p.description}</p>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Owner: {typeof p.owner === "string" ? p.owner : p.owner?.name}
-                                </p>
+                                <p className="text-xs text-gray-500 mt-2">Owner: {p.owner?.name}</p>
                             </div>
+
+                            {/* NO ai summary */}
                         </div>
                     ))}
-
-                    {joinedProjects.length === 0 && (
-                        <p className="text-sm text-gray-500">
-                            You have not joined any projects yet.
-                        </p>
-                    )}
                 </div>
             </section>
 
